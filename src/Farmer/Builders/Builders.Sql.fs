@@ -7,6 +7,7 @@ open Farmer.Arm.Sql
 open System.Net
 open Servers
 open Databases
+open Farmer.Identity
 
 type SqlAzureDbConfig = {
     Name: ResourceName
@@ -39,6 +40,7 @@ type SqlAzureConfig = {
     Databases: SqlAzureDbConfig list
     GeoReplicaServer: GeoReplicationSettings option
     Tags: Map<string, string>
+    Identity: Identity.ManagedIdentity
 } with
 
     /// Gets a basic .NET connection string using the administrator username / password.
@@ -87,6 +89,7 @@ type SqlAzureConfig = {
                 ActiveDirectoryAdmin = this.ActiveDirectoryAdmin
                 MinTlsVersion = this.MinTlsVersion
                 Tags = this.Tags
+                Identity = this.Identity
             }
 
             for database in this.Databases do
@@ -152,6 +155,7 @@ type SqlAzureConfig = {
                         ActiveDirectoryAdmin = this.ActiveDirectoryAdmin
                         MinTlsVersion = this.MinTlsVersion
                         Tags = this.Tags
+                        Identity = this.Identity
                     }
 
                     for database in this.Databases do
@@ -287,6 +291,7 @@ type SqlServerBuilder() =
         MinTlsVersion = None
         GeoReplicaServer = None
         Tags = Map.empty
+        Identity = ManagedIdentity.Empty
     }
 
     member _.Run state : SqlAzureConfig =
@@ -433,6 +438,26 @@ type SqlServerBuilder() =
     member _.SetActiveDirectoryAdmin(state: SqlAzureConfig, activeDirectoryAdminSettings) = {
         state with
             ActiveDirectoryAdmin = activeDirectoryAdminSettings
+    }
+
+    /// Adds a managed identity to the the Function App.
+    [<CustomOperation "add_identity">]
+    member this.AddIdentity(state: SqlAzureConfig, identity: UserAssignedIdentity) = {
+        state with
+            Identity = (state.Identity + identity)
+    }
+
+    member this.AddIdentity(state, identity: UserAssignedIdentityConfig) =
+        this.AddIdentity(state, identity.UserAssignedIdentity)
+
+    /// Activates the system identity of the Function App.
+    [<CustomOperation "system_identity">]
+    member this.SystemIdentity(state: SqlAzureConfig) = {
+        state with
+            Identity = {
+                state.Identity with
+                    SystemAssigned = Enabled
+            }
     }
 
     interface ITaggable<SqlAzureConfig> with

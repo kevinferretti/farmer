@@ -8,6 +8,7 @@ open Farmer.Builders
 open Microsoft.Azure.Management.Sql
 open System
 open Microsoft.Rest
+open Microsoft.Azure.Management.WebSites
 
 let sql = sqlServer
 
@@ -308,6 +309,16 @@ let tests =
             Expect.throws
                 (fun () -> sqlServer { admin_username "test" } |> ignore)
                 "Must set a name on a sql server account"
+        }
+
+        test "Handles identity correctly" {
+            let sql = sqlServer {
+                name "my37server"
+                admin_username "isaac"
+            }
+            let model: Models.Server = sql |> getResourceAtIndex client.SerializationSettings 0
+
+            Expect.isNull model.Identity "Default managed identity should be null"
         }
 
         for (adOnlyAuth, principalType, adminUserName) in

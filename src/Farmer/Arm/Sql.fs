@@ -2,6 +2,7 @@
 module Farmer.Arm.Sql
 
 open Farmer
+open Farmer.Identity
 open Farmer.Sql
 open System.Net
 
@@ -68,6 +69,7 @@ type Server = {
     ActiveDirectoryAdmin: ActiveDirectoryAdminSettings option
     MinTlsVersion: TlsVersion option
     Tags: Map<string, string>
+    Identity: Identity.ManagedIdentity
 } with
 
     member private this.BuildSqlSeverPropertiesBase() : SqlServerJsonProperties = {
@@ -136,6 +138,11 @@ type Server = {
                 this.Location,
                 tags = (this.Tags |> Map.add "displayName" this.ServerName.ResourceName.Value)
             ) with
+                identity =
+                    if this.Identity = ManagedIdentity.Empty then
+                        Unchecked.defaultof<_>
+                    else
+                        this.Identity.ToArmJson
                 properties =
                     match this.ActiveDirectoryAdmin with
                     | MixedModeAuth x -> this.BuildSqlServerPropertiesWithMixedModeAdministrator(x)

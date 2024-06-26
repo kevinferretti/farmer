@@ -25,6 +25,8 @@ The SQL Azure module contains two builders - `sqlServer`, used to create SQL Azu
 | elastic_pool_capacity | Sets the optional disk size in MB for the elastic pool for each database.                                                       |
 | min_tls_version | Sets the minium TLS version for the SQL server                                                                                  |
 | geo_replicate | Geo-replicate all the databases in this server to another location, having NameSuffix after original server and database names. |
+| add_identity | Adds a managed identity to the the Function App |
+| system_identity | Activates the system identity of the Function App. |
 
 #### ActiveDirectoryAdminSettings Members
 | Member | Purpose                                                                    |
